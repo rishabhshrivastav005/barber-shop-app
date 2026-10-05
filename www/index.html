@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F2B38">
-<title>Barber Manager</title>
+<title>Diamond Hair Cutting Salon</title>
 <style>
 :root{
   --ink:#1F2B38; --ink2:#4A5866; --muted:#7D8994; --line:#E2E5E9;
@@ -22,7 +22,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 header{background:var(--ink);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 14px) 18px 14px;display:flex;align-items:center;gap:12px;flex-shrink:0}
 header .back{background:none;border:0;color:#fff;font-size:26px;line-height:1;padding:0 6px 0 0;cursor:pointer}
 header h1{margin:0;font-size:21px;font-weight:700;letter-spacing:.2px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-header .stripe{width:8px;height:30px;border-radius:4px;background:repeating-linear-gradient(135deg,var(--leather) 0 5px,#fff 5px 9px,#2E4A6B 9px 14px,#fff 14px 18px)}
+header .logo{width:34px;height:34px;flex-shrink:0;margin:-4px -4px -4px -6px}
 main{flex:1;overflow-y:auto;padding:16px 16px 110px}
 nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
 nav .in{display:flex;width:100%;max-width:720px}
@@ -133,7 +133,7 @@ table.t td.n,table.t th.n{text-align:right}
 </head>
 <body>
 <div id="app">
-  <header><button class="back" id="backBtn" hidden aria-label="Back">‹</button><span class="stripe" id="stripe"></span><h1 id="title">Barber Manager</h1></header>
+  <header><button class="back" id="backBtn" hidden aria-label="Back">‹</button><svg class="logo" id="stripe" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="215 235 590 560"><polygon points="232.0,452.0 392.0,342.0 452.0,452.0" fill="#E9EEF3" opacity="1"/><polygon points="392.0,342.0 632.0,342.0 572.0,452.0 452.0,452.0" fill="#FFFFFF" opacity="1"/><polygon points="632.0,342.0 792.0,452.0 572.0,452.0" fill="#C9D3DD" opacity="1"/><polygon points="232.0,452.0 452.0,452.0 512.0,782.0" fill="#B9C6D3" opacity="1"/><polygon points="452.0,452.0 572.0,452.0 512.0,782.0" fill="#DCE4EC" opacity="1"/><polygon points="572.0,452.0 792.0,452.0 512.0,782.0" fill="#97A8B9" opacity="1"/><polygon points="232.0,452.0 392.0,342.0 632.0,342.0 792.0,452.0 512.0,782.0" fill="none" stroke="#C8A15A" stroke-width="14.0" stroke-linejoin="round"/><line x1="232.0" y1="452.0" x2="792.0" y2="452.0" stroke="#C8A15A" stroke-width="7.0" stroke-linecap="round"/><line x1="452.0" y1="452.0" x2="392.0" y2="342.0" stroke="#C8A15A" stroke-width="7.0" stroke-linecap="round"/><line x1="572.0" y1="452.0" x2="632.0" y2="342.0" stroke="#C8A15A" stroke-width="7.0" stroke-linecap="round"/><line x1="452.0" y1="452.0" x2="512.0" y2="782.0" stroke="#C8A15A" stroke-width="7.0" stroke-linecap="round"/><line x1="572.0" y1="452.0" x2="512.0" y2="782.0" stroke="#C8A15A" stroke-width="7.0" stroke-linecap="round"/><path d="M735.0,249.0 Q743.64,288.36 783.0,297.0 Q743.64,305.64 735.0,345.0 Q726.36,305.64 687.0,297.0 Q726.36,288.36 735.0,249.0Z" fill="#E7C77F"/></svg><h1 id="title">Diamond Hair Cutting Salon</h1></header>
   <main id="main"></main>
   <nav><div class="in" id="nav"></div></nav>
 </div>
@@ -180,7 +180,7 @@ const BARBER_COLORS=['#7A2430','#2E4A6B','#A8823A','#2F7A55','#6B4C8A','#B4651B'
 /* ---------- data ---------- */
 const KEY='barber-manager-v1';
 function seed(){
-  return {settings:{shop:'My Barber Shop',currency:'₹'},
+  return {settings:{shop:'Diamond Hair Cutting Salon',currency:'₹'},
     barbers:[{id:uid(),name:'Owner',commission:0,color:BARBER_COLORS[0],active:true}],
     services:[
       {id:uid(),name:'Haircut',price:200,duration:30},
@@ -193,6 +193,7 @@ function seed(){
 let db;
 try{db=JSON.parse(localStorage.getItem(KEY))}catch(e){db=null}
 if(!db||!db.settings)db=seed();
+if(db.settings.shop==='My Barber Shop'){db.settings.shop='Diamond Hair Cutting Salon'}
 for(const k of ['barbers','services','clients','appts','queue','products','sales','expenses','recurring'])if(!Array.isArray(db[k]))db[k]=[];
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast('Could not save. Storage may be full.')}}
 const byId=(arr,id)=>db[arr].find(x=>x.id===id);
@@ -231,7 +232,7 @@ function render(){
   $('#nav').innerHTML=TABS.map(([k,l,ic])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-id="${k}" aria-label="${l}">${ic}<span>${l}</span>${k==='queue'&&waiting?`<span class="dot">${waiting}</span>`:''}</button>`).join('');
   const title=S.sub?SUBS[S.sub][0]:S.tab==='home'?db.settings.shop:TABS.find(t=>t[0]===S.tab)[1];
   $('#title').textContent=title;
-  $('#backBtn').hidden=!S.sub;$('#stripe').hidden=!!S.sub;
+  $('#backBtn').hidden=!S.sub;$('#stripe').style.display=S.sub?'none':'';
   const v=S.sub?VIEWS[S.sub]:VIEWS[S.tab];
   $('#main').innerHTML=v();
   document.querySelectorAll('.fab').forEach(f=>f.remove());
@@ -643,7 +644,7 @@ VIEWS.settings=()=>`
   <div class="btnrow" style="margin-top:0"><button class="btn sec" data-act="backup">Copy backup</button><button class="btn sec" data-act="restore">Restore</button></div></div>
  <h2>Danger zone</h2>
  <div class="card"><button class="btn ghost-bad block" data-act="reset">Erase all data</button></div>
- <p class="muted" style="font-size:13px;text-align:center;margin-top:20px">Barber Manager 1.0 · works offline</p>`;
+ <p class="muted" style="font-size:13px;text-align:center;margin-top:20px">Diamond Hair Cutting Salon · v1.1 · works offline</p>`;
 
 /* ---------- actions ---------- */
 const ACT={

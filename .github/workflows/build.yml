@@ -19,14 +19,15 @@ jobs:
       - run: npm install
       - run: npx cap add android
       - run: npx cap sync android
+      - run: npx @capacitor/assets generate --android --iconBackgroundColor '#1F2B38' --splashBackgroundColor '#1F2B38'
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
-      - run: cp android/app/build/outputs/apk/debug/app-debug.apk BarberManager.apk
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk DiamondHairSalon.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: BarberManager-apk
-          path: BarberManager.apk
+          name: DiamondHairSalon-apk
+          path: DiamondHairSalon.apk
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: Barber Manager build ${{ github.run_number }}
-          files: BarberManager.apk
+          name: Diamond Hair Cutting Salon build ${{ github.run_number }}
+          files: DiamondHairSalon.apk
