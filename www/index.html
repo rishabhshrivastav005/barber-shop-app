@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F2B38">
+<title>Barber Manager</title>
+<style>
+:root{
+  --ink:#1F2B38; --ink2:#4A5866; --muted:#7D8994; --line:#E2E5E9;
+  --paper:#F6F7F8; --card:#FFFFFF; --leather:#7A2430; --leather-soft:#F5E6E8;
+  --brass:#A8823A; --brass-soft:#F6EEDC; --ok:#2F7A55; --ok-soft:#E3F2EA;
+  --warn:#B4651B; --warn-soft:#FBEBDB; --bad:#A33A3A; --bad-soft:#F8E3E3;
+  --r-lg:18px; --r:12px; --r-sm:8px;
+  color-scheme: light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:"Roboto Condensed","Arial Narrow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.4}
+button,input,select,textarea{font:inherit;color:inherit}
+#app{display:flex;flex-direction:column;height:100%;max-width:720px;margin:0 auto}
+header{background:var(--ink);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 14px) 18px 14px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+header .back{background:none;border:0;color:#fff;font-size:26px;line-height:1;padding:0 6px 0 0;cursor:pointer}
+header h1{margin:0;font-size:21px;font-weight:700;letter-spacing:.2px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .stripe{width:8px;height:30px;border-radius:4px;background:repeating-linear-gradient(135deg,var(--leather) 0 5px,#fff 5px 9px,#2E4A6B 9px 14px,#fff 14px 18px)}
+main{flex:1;overflow-y:auto;padding:16px 16px 110px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav .in{display:flex;width:100%;max-width:720px}
+nav button{flex:1;background:none;border:0;padding:9px 2px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:12.5px;cursor:pointer;position:relative}
+nav button svg{width:23px;height:23px}
+nav button.on{color:var(--leather);font-weight:700}
+nav .dot{position:absolute;top:5px;left:calc(50% + 7px);background:var(--leather);color:#fff;font-size:10.5px;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+h2{font-size:15px;margin:22px 0 9px;color:var(--ink2);font-weight:700}
+h2:first-child{margin-top:4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.stat b{display:block;font-size:24px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat span{font-size:13.5px;color:var(--muted)}
+.hero{background:var(--ink);color:#fff;border-radius:var(--r-lg);padding:18px;margin-bottom:12px;position:relative;overflow:hidden}
+.hero small{color:#B9C3CD;font-size:14px}
+.hero .big{font-size:38px;font-weight:700;line-height:1.1;margin:4px 0 10px;font-variant-numeric:tabular-nums}
+.hero .row{display:flex;gap:18px;font-size:14px;color:#D7DEE5;flex-wrap:wrap}
+.hero .row b{color:#fff}
+.list{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line);cursor:pointer;width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left}
+.item:first-child{border-top:0}
+.item:active{background:var(--paper)}
+.item .main{flex:1;min-width:0}
+.item .t{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .s{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .r{text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0}
+.time{font-weight:700;font-size:15px;width:50px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.bar-left{width:4px;align-self:stretch;border-radius:2px;flex-shrink:0}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:3px}
+.p-scheduled{background:var(--brass-soft);color:var(--brass)}
+.p-completed{background:var(--ok-soft);color:var(--ok)}
+.p-cancelled{background:#ECEEF0;color:var(--muted)}
+.p-noshow{background:var(--bad-soft);color:var(--bad)}
+.p-waiting{background:var(--brass-soft);color:var(--brass)}
+.p-serving{background:var(--ok-soft);color:var(--ok)}
+.p-low{background:var(--bad-soft);color:var(--bad)}
+.empty{padding:26px 16px;text-align:center;color:var(--muted);font-size:14.5px}
+.btn{border:0;border-radius:var(--r);padding:12px 16px;font-weight:700;cursor:pointer;background:var(--ink);color:#fff;font-size:15.5px}
+.btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn.red{background:var(--leather)}
+.btn.ok{background:var(--ok)}
+.btn.ghost-bad{background:var(--bad-soft);color:var(--bad)}
+.btn.sm{padding:7px 12px;font-size:14px;border-radius:var(--r-sm)}
+.btn.block{width:100%;display:block}
+.fab{position:fixed;right:max(18px,calc(50% - 342px));bottom:calc(env(safe-area-inset-bottom,0px) + 78px);background:var(--leather);color:#fff;border:0;border-radius:28px;padding:15px 22px;font-weight:700;font-size:16px;box-shadow:0 6px 18px rgba(122,36,48,.35);cursor:pointer;z-index:4}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;scrollbar-width:none}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:20px;padding:7px 14px;white-space:nowrap;cursor:pointer;font-size:14.5px}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.daynav{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.daynav .lbl{flex:1;text-align:center;font-weight:700;font-size:17px}
+.daynav button{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);width:42px;height:40px;font-size:20px;cursor:pointer}
+.seg{display:flex;background:#E9ECEF;border-radius:var(--r);padding:3px;margin-bottom:14px}
+.seg button{flex:1;border:0;background:none;padding:9px;border-radius:9px;font-weight:700;color:var(--ink2);cursor:pointer}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.alert{background:var(--bad-soft);color:var(--bad);border-radius:var(--r);padding:11px 14px;font-size:14.5px;margin-bottom:12px}
+.menu .item .ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--leather-soft);color:var(--leather);flex-shrink:0}
+.menu .item .ic svg{width:21px;height:21px}
+.chev{color:var(--muted);font-size:20px}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(20,28,38,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center;animation:fade .15s}
+.sheet{background:var(--card);width:100%;max-width:720px;border-radius:20px 20px 0 0;max-height:92%;display:flex;flex-direction:column;animation:up .2s ease-out}
+.sheet .hd{padding:14px 18px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.sheet .hd h3{margin:0;font-size:18px;flex:1}
+.sheet .hd button{background:none;border:0;font-size:24px;color:var(--muted);cursor:pointer;line-height:1}
+.sheet .bd{padding:14px 18px;overflow-y:auto}
+.sheet .ft{padding:12px 18px calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;gap:10px;border-top:1px solid var(--line)}
+.sheet .ft .btn{flex:1}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+label.f{display:block;margin-bottom:12px}
+label.f>span{display:block;font-size:13.5px;color:var(--ink2);margin-bottom:5px;font-weight:700}
+.f input,.f select,.f textarea{width:100%;border:1px solid #CDD3D9;border-radius:var(--r-sm);padding:11px 12px;background:#fff;font-size:16px}
+.f textarea{min-height:70px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:var(--ink)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;align-items:center;gap:10px;margin:4px 0 12px;font-size:15px}
+.check input{width:20px;height:20px}
+.actions{display:flex;flex-direction:column;gap:9px}
+.actions .btn{text-align:left}
+:focus-visible{outline:2px solid var(--leather);outline-offset:2px}
+/* charts */
+.vchart{display:flex;align-items:flex-end;gap:3px;height:150px;padding-top:8px}
+.vchart .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.vchart .b{width:100%;background:var(--ink);border-radius:3px 3px 0 0;min-height:2px}
+.vchart .b.hi{background:var(--leather)}
+.vlabels{display:flex;gap:3px;margin-top:5px}
+.vlabels span{flex:1;text-align:center;font-size:10.5px;color:var(--muted);min-width:0;overflow:hidden}
+.hbar{margin-bottom:11px}
+.hbar .top{display:flex;justify-content:space-between;font-size:14.5px;margin-bottom:4px}
+.hbar .top b{font-variant-numeric:tabular-nums}
+.hbar .track{height:9px;background:#EEF0F2;border-radius:5px;overflow:hidden}
+.hbar .fill{height:100%;background:var(--leather);border-radius:5px}
+table.t{width:100%;border-collapse:collapse;font-size:14.5px}
+table.t th{text-align:left;color:var(--muted);font-weight:700;font-size:12.5px;padding:0 6px 8px}
+table.t td{padding:9px 6px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+table.t td.n,table.t th.n{text-align:right}
+.search{width:100%;border:1px solid var(--line);border-radius:var(--r);padding:11px 14px;margin-bottom:12px;background:var(--card);font-size:16px}
+.muted{color:var(--muted)}
+.mono{font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 140px);transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:24px;font-size:14.5px;z-index:40;animation:fade .2s;max-width:90%;text-align:center}
+.qnum{width:36px;height:36px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.qnum.serving{background:var(--ok)}
+.btnrow{display:flex;gap:8px;margin-top:10px}
+.btnrow .btn{flex:1}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><button class="back" id="backBtn" hidden aria-label="Back">‹</button><span class="stripe" id="stripe"></span><h1 id="title">Barber Manager</h1></header>
+  <main id="main"></main>
+  <nav><div class="in" id="nav"></div></nav>
+</div>
+<div id="layer"></div>
+
+<script>
+/* ---------- icons ---------- */
+const I={
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>',
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16.5" rx="2"/><path d="M16 2.5v4M8 2.5v4M3 10h18"/></svg>',
+ queue:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="3.5"/><path d="M2.5 20.5c0-3.6 2.9-6.5 6.5-6.5s6.5 2.9 6.5 6.5"/><path d="M16 4a3.5 3.5 0 0 1 0 6.8M18 14.3c2 .9 3.5 3 3.5 6.2"/></svg>',
+ money:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.8"/><path d="M6 9.5h.01M18 15.5h.01"/></svg>',
+ more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
+ chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+ box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',
+ user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>',
+ scissors:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg>',
+ list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>',
+ gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1.1V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>'
+};
+
+/* ---------- utils ---------- */
+const $=s=>document.querySelector(s);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>ymd(new Date());
+const nowHM=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
+const parseD=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const addDays=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return ymd(d)};
+const ym=s=>s.slice(0,7);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(v);return isNaN(n)?0:n};
+const money=n=>db.settings.currency+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2});
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmtDay=s=>{const d=parseD(s);return DOW[d.getDay()]+', '+d.getDate()+' '+MON[d.getMonth()]};
+const fmtMonth=s=>{const[a,b]=s.split('-').map(Number);return MON[b-1]+' '+a};
+const fmtTime=t=>{if(!t)return'';let[h,m]=t.split(':').map(Number);const ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+pad(m)+' '+ap};
+const toMin=t=>{const[h,m]=(t||'0:0').split(':').map(Number);return h*60+m};
+const EXP_CATS=['Rent','Electricity','Water','Salaries','Products & supplies','Maintenance','Internet & phone','Marketing','Other'];
+const BARBER_COLORS=['#7A2430','#2E4A6B','#A8823A','#2F7A55','#6B4C8A','#B4651B','#3C7A86'];
+
+/* ---------- data ---------- */
+const KEY='barber-manager-v1';
+function seed(){
+  return {settings:{shop:'My Barber Shop',currency:'₹'},
+    barbers:[{id:uid(),name:'Owner',commission:0,color:BARBER_COLORS[0],active:true}],
+    services:[
+      {id:uid(),name:'Haircut',price:200,duration:30},
+      {id:uid(),name:'Beard trim',price:100,duration:15},
+      {id:uid(),name:'Haircut + beard',price:280,duration:45},
+      {id:uid(),name:'Clean shave',price:120,duration:20},
+      {id:uid(),name:'Hair colour',price:500,duration:60}],
+    clients:[],appts:[],queue:[],products:[],sales:[],expenses:[],recurring:[]};
+}
+let db;
+try{db=JSON.parse(localStorage.getItem(KEY))}catch(e){db=null}
+if(!db||!db.settings)db=seed();
+for(const k of ['barbers','services','clients','appts','queue','products','sales','expenses','recurring'])if(!Array.isArray(db[k]))db[k]=[];
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){toast('Could not save. Storage may be full.')}}
+const byId=(arr,id)=>db[arr].find(x=>x.id===id);
+const barberName=id=>byId('barbers',id)?.name||'Any barber';
+const activeBarbers=()=>db.barbers.filter(b=>b.active!==false);
+
+/* recurring expenses: add any months that are due */
+function runRecurring(){
+  const t=today(),cur=ym(t);let added=0;
+  for(const r of db.recurring){
+    if(r.paused)continue;
+    let m=r.nextMonth||r.startMonth||cur;
+    while(m<=cur){
+      const[y,mo]=m.split('-').map(Number);
+      const dim=new Date(y,mo,0).getDate();
+      const date=m+'-'+pad(Math.min(r.day,dim));
+      if(date>t)break;
+      db.expenses.push({id:uid(),category:r.category,amount:r.amount,date,note:(r.note?r.note+' ':'')+'(monthly)',recurringId:r.id});
+      added++;
+      const nd=new Date(y,mo,1);m=nd.getFullYear()+'-'+pad(nd.getMonth()+1);
+    }
+    r.nextMonth=m;
+  }
+  if(added)save();
+  return added;
+}
+
+/* ---------- state & routing ---------- */
+const S={tab:'home',sub:null,date:today(),barber:'all',month:ym(today()),moneyTab:'expenses',period:'month',clientQ:''};
+const TABS=[['home','Today',I.home],['schedule','Schedule',I.cal],['queue','Walk-ins',I.queue],['money','Expenses',I.money],['more','More',I.more]];
+const SUBS={reports:['Reports',I.chart],inventory:['Inventory',I.box],clients:['Clients',I.user],barbers:['Barbers',I.scissors],services:['Services & prices',I.list],settings:['Settings',I.gear]};
+
+function go(tab,sub=null){S.tab=tab;S.sub=sub;render();$('#main').scrollTop=0}
+function render(){
+  const waiting=db.queue.length;
+  $('#nav').innerHTML=TABS.map(([k,l,ic])=>`<button class="${S.tab===k?'on':''}" data-act="tab" data-id="${k}" aria-label="${l}">${ic}<span>${l}</span>${k==='queue'&&waiting?`<span class="dot">${waiting}</span>`:''}</button>`).join('');
+  const title=S.sub?SUBS[S.sub][0]:S.tab==='home'?db.settings.shop:TABS.find(t=>t[0]===S.tab)[1];
+  $('#title').textContent=title;
+  $('#backBtn').hidden=!S.sub;$('#stripe').hidden=!!S.sub;
+  const v=S.sub?VIEWS[S.sub]:VIEWS[S.tab];
+  $('#main').innerHTML=v();
+  document.querySelectorAll('.fab').forEach(f=>f.remove());
+  const fab=FABS[S.sub||S.tab];
+  if(fab){const b=document.createElement('button');b.className='fab';b.textContent=fab[0];b.onclick=fab[1];document.body.appendChild(b)}
+}
+
+/* ---------- sheet (bottom modal) ---------- */
+let sheetStack=[];
+function sheet(title,body,actions=[]){
+  const el=document.createElement('div');el.className='scrim';
+  el.innerHTML=`<div class="sheet" role="dialog" aria-label="${esc(title)}"><div class="hd"><h3>${esc(title)}</h3><button aria-label="Close" data-close>×</button></div><div class="bd">${body}</div>${actions.length?`<div class="ft">${actions.map((a,i)=>`<button class="btn ${a.cls||''}" data-i="${i}">${esc(a.label)}</button>`).join('')}</div>`:''}</div>`;
+  el.addEventListener('click',e=>{
+    if(e.target===el||e.target.closest('[data-close]'))return closeSheet();
+    const b=e.target.closest('.ft [data-i]');
+    if(b){const a=actions[+b.dataset.i];const r=a.fn?a.fn(vals(el),el):undefined;if(r!==false)closeSheet(el)}
+  });
+  $('#layer').appendChild(el);sheetStack.push(el);
+  const first=el.querySelector('.bd input:not([type=checkbox]),.bd select');if(first&&!first.value)setTimeout(()=>first.focus(),250);
+  return el;
+}
+function closeSheet(el){el=el||sheetStack[sheetStack.length-1];if(!el)return;sheetStack=sheetStack.filter(x=>x!==el);el.remove()}
+function closeAll(){while(sheetStack.length)closeSheet()}
+function vals(el){const o={};el.querySelectorAll('[name]').forEach(i=>{o[i.name]=i.type==='checkbox'?i.checked:i.value.trim()});return o}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2200)}
+function confirmSheet(msg,label,fn,cls='red'){sheet('Are you sure?',`<p style="margin:0">${esc(msg)}</p>`,[{label:'Keep',cls:'sec'},{label,cls,fn}])}
+const field=(label,name,val='',type='text',extra='')=>`<label class="f"><span>${label}</span><input name="${name}" type="${type}" value="${esc(val)}" ${extra}></label>`;
+const selectF=(label,name,opts,val)=>`<label class="f"><span>${label}</span><select name="${name}">${opts.map(([v,l])=>`<option value="${esc(v)}" ${String(v)===String(val)?'selected':''}>${esc(l)}</option>`).join('')}</select></label>`;
+function need(v,what){if(!v){toast(what+' is required');return false}return true}
+
+/* ---------- money helpers ---------- */
+function incomeBetween(from,to){
+  const ap=db.appts.filter(a=>a.status==='completed'&&a.date>=from&&a.date<=to);
+  const sl=db.sales.filter(s=>s.date>=from&&s.date<=to);
+  const svc=ap.reduce((s,a)=>s+num(a.price),0),prod=sl.reduce((s,x)=>s+num(x.amount),0);
+  return {ap,sl,svc,prod,total:svc+prod};
+}
+const expBetween=(from,to)=>db.expenses.filter(e=>e.date>=from&&e.date<=to);
+const monthRange=m=>{const[y,mo]=m.split('-').map(Number);return[m+'-01',m+'-'+pad(new Date(y,mo,0).getDate())]};
+
+/* ---------- views ---------- */
+const VIEWS={};
+const FABS={};
+
+VIEWS.home=()=>{
+  const t=today(),inc=incomeBetween(t,t);
+  const todays=db.appts.filter(a=>a.date===t);
+  const upcoming=todays.filter(a=>a.status==='scheduled').sort((a,b)=>a.time.localeCompare(b.time));
+  const [mf,mt]=monthRange(ym(t));const mInc=incomeBetween(mf,mt).total,mExp=expBetween(mf,mt).reduce((s,e)=>s+num(e.amount),0);
+  const low=db.products.filter(p=>num(p.qty)<=num(p.low));
+  const waiting=db.queue.filter(q=>q.status==='waiting').length,serving=db.queue.filter(q=>q.status==='serving').length;
+  return `
+  <div class="hero"><small>${fmtDay(t)} · earned today</small><div class="big">${money(inc.total)}</div>
+   <div class="row"><span><b>${todays.filter(a=>a.status==='completed').length}</b> served</span><span><b>${upcoming.length}</b> still booked</span><span><b>${waiting}</b> waiting${serving?`, <b>${serving}</b> in chair`:''}</span></div></div>
+  ${low.length?`<div class="alert" data-act="sub" data-id="inventory" style="cursor:pointer"><b>Low stock:</b> ${low.map(p=>esc(p.name)+' ('+num(p.qty)+')').join(', ')}</div>`:''}
+  <div class="grid2">
+    <div class="stat"><b>${money(mInc)}</b><span>Income in ${MON[parseD(t).getMonth()]}</span></div>
+    <div class="stat"><b style="color:${mInc-mExp<0?'var(--bad)':'var(--ok)'}">${money(mInc-mExp)}</b><span>Profit after ${money(mExp)} expenses</span></div>
+  </div>
+  <h2>Next up today</h2>
+  ${upcoming.length?`<div class="list">${upcoming.map(a=>apptRow(a,true)).join('')}</div>`:`<div class="list"><div class="empty">No more bookings today.<br><br><button class="btn sm" data-act="book">Book a client</button></div></div>`}
+  <div class="btnrow"><button class="btn sec" data-act="addWalkin">Add walk-in</button><button class="btn sec" data-act="addExpense">Add expense</button></div>`;
+};
+
+function apptRow(a,quick){
+  const b=byId('barbers',a.barberId);
+  return `<div class="item" data-act="appt" data-id="${a.id}">
+   <span class="bar-left" style="background:${b?.color||'#CDD3D9'}"></span>
+   <span class="time">${a.time?fmtTime(a.time).replace(' ','<br><small class="muted">')+'</small>':'—'}</span>
+   <span class="main"><div class="t">${esc(a.clientName)}</div><div class="s">${esc(a.serviceName)} · ${esc(b?.name||'Any barber')}${a.source==='walkin'?' · walk-in':''}</div></span>
+   <span class="r"><div class="mono">${money(a.price)}</div>${quick&&a.status==='scheduled'?`<button class="btn ok sm" data-act="complete" data-id="${a.id}" style="margin-top:4px">Done</button>`:`<span class="pill p-${a.status}">${statusLabel(a.status)}</span>`}</span></div>`;
+}
+const statusLabel=s=>({scheduled:'Booked',completed:'Completed',cancelled:'Cancelled',noshow:'No-show',waiting:'Waiting',serving:'In chair'}[s]||s);
+
+VIEWS.schedule=()=>{
+  let list=db.appts.filter(a=>a.date===S.date);
+  if(S.barber!=='all')list=list.filter(a=>a.barberId===S.barber);
+  list.sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const done=list.filter(a=>a.status==='completed');
+  return `
+  <div class="daynav"><button data-act="day" data-id="-1" aria-label="Previous day">‹</button><div class="lbl">${S.date===today()?'Today, ':''}${fmtDay(S.date)}</div><button data-act="day" data-id="1" aria-label="Next day">›</button></div>
+  <div class="chips">${S.date!==today()?`<button class="chip" data-act="day" data-id="0">Go to today</button>`:''}<button class="chip ${S.barber==='all'?'on':''}" data-act="fbarber" data-id="all">All barbers</button>${activeBarbers().map(b=>`<button class="chip ${S.barber===b.id?'on':''}" data-act="fbarber" data-id="${b.id}">${esc(b.name)}</button>`).join('')}</div>
+  ${list.length?`<div class="list">${list.map(a=>apptRow(a,S.date===today())).join('')}</div>
+  <p class="muted" style="font-size:14px">${list.length} appointment${list.length>1?'s':''} · ${done.length} completed · ${money(done.reduce((s,a)=>s+num(a.price),0))} earned</p>`
+  :`<div class="list"><div class="empty">Nothing booked for this day.</div></div>`}`;
+};
+FABS.schedule=['+ Book',()=>bookForm()];
+FABS.home=['+ Book',()=>bookForm()];
+
+function serviceOpts(){return db.services.map(s=>[s.id,`${s.name} — ${money(s.price)}`])}
+function bookForm(a,pre={}){
+  const isNew=!a;
+  a=a||{...{date:S.tab==='schedule'?S.date:today(),time:'',barberId:S.barber!=='all'?S.barber:(activeBarbers()[0]?.id||''),serviceId:db.services[0]?.id||'',price:db.services[0]?.price||0,clientName:'',phone:'',notes:''},...pre};
+  const el=sheet(isNew?'Book appointment':'Edit appointment',`
+    <label class="f"><span>Client name</span><input name="clientName" list="clientList" value="${esc(a.clientName)}" autocomplete="off"></label>
+    <datalist id="clientList">${db.clients.map(c=>`<option value="${esc(c.name)}">${esc(c.phone||'')}</option>`).join('')}</datalist>
+    ${field('Phone (for reminders)','phone',a.phone,'tel')}
+    ${selectF('Service','serviceId',serviceOpts(),a.serviceId)}
+    ${selectF('Barber','barberId',activeBarbers().map(b=>[b.id,b.name]),a.barberId)}
+    <div class="row2">${field('Date','date',a.date,'date')}${field('Time','time',a.time,'time')}</div>
+    ${field('Price','price',a.price,'number','inputmode="decimal" min="0"')}
+    <label class="f"><span>Notes</span><textarea name="notes">${esc(a.notes)}</textarea></label>`,
+    [{label:'Cancel',cls:'sec'},{label:isNew?'Book':'Save changes',cls:'red',fn:v=>{
+      if(!need(v.clientName,'Client name')||!need(v.date,'Date')||!need(v.time,'Time'))return false;
+      const svc=byId('services',v.serviceId);
+      const c=upsertClient(v.clientName,v.phone);
+      const dur=svc?.duration||30;
+      const clash=db.appts.find(x=>x.id!==a.id&&x.status==='scheduled'&&x.date===v.date&&x.barberId===v.barberId&&Math.abs(toMin(x.time)-toMin(v.time))<Math.max(dur,byId('services',x.serviceId)?.duration||30));
+      const rec={...a,clientId:c.id,clientName:c.name,phone:v.phone||c.phone||'',serviceId:v.serviceId,serviceName:svc?.name||'Service',barberId:v.barberId,date:v.date,time:v.time,price:num(v.price),notes:v.notes};
+      if(isNew){rec.id=uid();rec.status='scheduled';rec.source='booking';rec.created=Date.now();db.appts.push(rec)}
+      else Object.assign(byId('appts',a.id),rec);
+      save();S.date=v.date;render();
+      toast(clash?`Booked — note: ${barberName(v.barberId)} already has ${clash.clientName} at ${fmtTime(clash.time)}`:(isNew?'Booked':'Saved'));
+    }}]);
+  const sel=el.querySelector('[name=serviceId]'),pr=el.querySelector('[name=price]');
+  sel.onchange=()=>{const s=byId('services',sel.value);if(s)pr.value=s.price};
+  const nm=el.querySelector('[name=clientName]'),ph=el.querySelector('[name=phone]');
+  nm.addEventListener('change',()=>{const c=db.clients.find(c=>c.name.toLowerCase()===nm.value.trim().toLowerCase());if(c&&!ph.value)ph.value=c.phone||''});
+}
+function upsertClient(name,phone){
+  const digits=(phone||'').replace(/\D/g,'');
+  let c=(digits&&db.clients.find(c=>(c.phone||'').replace(/\D/g,'')===digits))||db.clients.find(c=>c.name.toLowerCase()===name.toLowerCase());
+  if(!c){c={id:uid(),name,phone:phone||'',notes:'',created:Date.now()};db.clients.push(c)}
+  else if(phone&&!c.phone)c.phone=phone;
+  return c;
+}
+function waLink(phone,text){let d=(phone||'').replace(/\D/g,'');if(d.length===10)d='91'+d;return `https://wa.me/${d}?text=${encodeURIComponent(text)}`}
+function openExt(url){window.location.href=url}
+
+function apptActions(id){
+  const a=byId('appts',id);if(!a)return;
+  const msg=`Hi ${a.clientName}, a reminder of your ${a.serviceName} at ${db.settings.shop} on ${fmtDay(a.date)} at ${fmtTime(a.time)}. See you then!`;
+  const el=sheet(a.clientName,`
+   <p style="margin:0 0 4px"><b>${esc(a.serviceName)}</b> with ${esc(barberName(a.barberId))}</p>
+   <p class="muted" style="margin:0 0 6px">${fmtDay(a.date)}${a.time?' at '+fmtTime(a.time):''} · ${money(a.price)}</p>
+   <span class="pill p-${a.status}">${statusLabel(a.status)}</span>
+   ${a.notes?`<p style="margin:12px 0 0;font-size:14.5px">${esc(a.notes)}</p>`:''}
+   <div class="actions" style="margin-top:16px">
+    ${a.status!=='completed'?`<button class="btn ok" data-x="completed">Mark as completed</button>`:''}
+    ${a.status!=='scheduled'?`<button class="btn sec" data-x="scheduled">Move back to booked</button>`:''}
+    ${a.status==='scheduled'?`<button class="btn sec" data-x="noshow">Mark as no-show</button><button class="btn sec" data-x="cancelled">Cancel appointment</button>`:''}
+    ${a.phone&&a.status==='scheduled'?`<button class="btn sec" data-x="wa">Send WhatsApp reminder</button>`:''}
+    ${a.phone?`<button class="btn sec" data-x="call">Call ${esc(a.phone)}</button>`:''}
+    <button class="btn sec" data-x="edit">Edit details</button>
+    <button class="btn ghost-bad" data-x="del">Delete</button>
+   </div>`);
+  el.querySelector('.actions').onclick=e=>{
+    const x=e.target.closest('[data-x]')?.dataset.x;if(!x)return;
+    if(['completed','scheduled','noshow','cancelled'].includes(x)){a.status=x;if(x==='completed')a.completedAt=Date.now();save();closeSheet(el);render();toast(statusLabel(x))}
+    else if(x==='wa')openExt(waLink(a.phone,msg));
+    else if(x==='call')openExt('tel:'+a.phone);
+    else if(x==='edit'){closeSheet(el);bookForm(a)}
+    else if(x==='del'){closeSheet(el);confirmSheet('Delete this appointment? This can’t be undone.','Delete',()=>{db.appts=db.appts.filter(z=>z.id!==id);save();render()})}
+  };
+}
+
+/* ---------- walk-in queue ---------- */
+VIEWS.queue=()=>{
+  const serving=db.queue.filter(q=>q.status==='serving'),waiting=db.queue.filter(q=>q.status==='waiting').sort((a,b)=>a.added-b.added);
+  const n=Math.max(1,activeBarbers().length);
+  const remaining=serving.reduce((s,q)=>{const d=byId('services',q.serviceId)?.duration||30;return s+Math.max(5,d-(Date.now()-q.startedAt)/60000)},0);
+  let ahead=remaining;
+  const wRows=waiting.map((q,i)=>{const est=Math.round(ahead/n);ahead+=byId('services',q.serviceId)?.duration||30;
+    return `<div class="item" data-act="qitem" data-id="${q.id}"><span class="qnum">${i+1}</span><span class="main"><div class="t">${esc(q.name)}</div><div class="s">${esc(byId('services',q.serviceId)?.name||'Service')} · ${q.barberId?esc(barberName(q.barberId)):'Any barber'}</div></span><span class="r"><div class="mono">~${est} min</div><span class="s muted" style="font-size:12.5px">waiting ${Math.round((Date.now()-q.added)/60000)} min</span></span></div>`}).join('');
+  const sRows=serving.map(q=>`<div class="item" data-act="qitem" data-id="${q.id}"><span class="qnum serving">✓</span><span class="main"><div class="t">${esc(q.name)}</div><div class="s">${esc(byId('services',q.serviceId)?.name||'Service')} · ${esc(barberName(q.barberId))}</div></span><span class="r"><button class="btn ok sm" data-act="qdone" data-id="${q.id}">Done</button></span></div>`).join('');
+  return `
+  <div class="grid2" style="margin-bottom:4px"><div class="stat"><b>${waiting.length}</b><span>Waiting</span></div><div class="stat"><b>${waiting.length?'~'+Math.round(ahead/n)+' min':'0 min'}</b><span>Wait for a new walk-in</span></div></div>
+  <h2>In the chair</h2>${serving.length?`<div class="list">${sRows}</div>`:`<div class="list"><div class="empty">No one in the chair right now.</div></div>`}
+  <h2>Waiting</h2>${waiting.length?`<div class="list">${wRows}</div>`:`<div class="list"><div class="empty">The queue is empty. Add walk-ins as they arrive.</div></div>`}`;
+};
+FABS.queue=['+ Walk-in',()=>walkinForm()];
+function walkinForm(){
+  sheet('Add walk-in',`${field('Name','name')}${field('Phone (optional)','phone','','tel')}${selectF('Service','serviceId',serviceOpts(),db.services[0]?.id)}${selectF('Preferred barber','barberId',[['','Any barber'],...activeBarbers().map(b=>[b.id,b.name])],'')}`,
+   [{label:'Cancel',cls:'sec'},{label:'Add to queue',cls:'red',fn:v=>{if(!need(v.name,'Name'))return false;db.queue.push({id:uid(),name:v.name,phone:v.phone,serviceId:v.serviceId,barberId:v.barberId,status:'waiting',added:Date.now()});save();render();toast(v.name+' added to queue')}}]);
+}
+function queueActions(id){
+  const q=byId('queue',id);if(!q)return;
+  const el=sheet(q.name,`<p class="muted" style="margin:0">${esc(byId('services',q.serviceId)?.name||'Service')} · ${q.barberId?esc(barberName(q.barberId)):'Any barber'}</p>
+   <div class="actions" style="margin-top:16px">
+   ${q.status==='waiting'?`${selectF('Barber taking this client','barberId',activeBarbers().map(b=>[b.id,b.name]),q.barberId||activeBarbers()[0]?.id)}<button class="btn red" data-x="start">Start haircut</button>`:`<button class="btn ok" data-x="done">Done — record payment</button><button class="btn sec" data-x="back">Move back to waiting</button>`}
+   <button class="btn ghost-bad" data-x="remove">Remove from queue</button></div>`);
+  el.querySelector('.actions').onclick=e=>{
+    const x=e.target.closest('[data-x]')?.dataset.x;if(!x)return;
+    if(x==='start'){q.barberId=el.querySelector('[name=barberId]').value;q.status='serving';q.startedAt=Date.now();save();closeSheet(el);render()}
+    else if(x==='back'){q.status='waiting';save();closeSheet(el);render()}
+    else if(x==='done'){closeSheet(el);finishWalkin(id)}
+    else if(x==='remove'){db.queue=db.queue.filter(z=>z.id!==id);save();closeSheet(el);render()}
+  };
+}
+function finishWalkin(id){
+  const q=byId('queue',id);if(!q)return;const svc=byId('services',q.serviceId);
+  sheet('Record payment',`<p style="margin:0 0 12px"><b>${esc(q.name)}</b> · ${esc(svc?.name||'Service')} · ${esc(barberName(q.barberId))}</p>${field('Amount paid','price',svc?.price||0,'number','inputmode="decimal" min="0"')}<label class="check"><input type="checkbox" name="save" ${q.phone?'checked':''}> Save to clients list</label>`,
+  [{label:'Cancel',cls:'sec'},{label:'Complete',cls:'ok',fn:v=>{
+    let cid=null;if(v.save){cid=upsertClient(q.name,q.phone).id}
+    db.appts.push({id:uid(),clientId:cid,clientName:q.name,phone:q.phone||'',serviceId:q.serviceId,serviceName:svc?.name||'Service',barberId:q.barberId,date:today(),time:nowHM(),price:num(v.price),notes:'',status:'completed',source:'walkin',completedAt:Date.now(),created:Date.now()});
+    db.queue=db.queue.filter(z=>z.id!==id);save();render();toast('Completed · '+money(v.price));
+  }}]);
+}
+
+/* ---------- expenses ---------- */
+VIEWS.money=()=>{
+  const seg=`<div class="seg"><button class="${S.moneyTab==='expenses'?'on':''}" data-act="mtab" data-id="expenses">Expenses</button><button class="${S.moneyTab==='recurring'?'on':''}" data-act="mtab" data-id="recurring">Monthly bills</button></div>`;
+  if(S.moneyTab==='recurring'){
+    return seg+`<p class="muted" style="margin:0 0 12px;font-size:14.5px">Bills like rent and salaries are added to your expenses automatically each month on the day you set.</p>`+
+     (db.recurring.length?`<div class="list">${db.recurring.map(r=>`<div class="item" data-act="recur" data-id="${r.id}"><span class="main"><div class="t">${esc(r.category)}${r.note?' · '+esc(r.note):''}</div><div class="s">Every month on day ${r.day}${r.paused?' · paused':''}</div></span><span class="r mono">${money(r.amount)}</span></div>`).join('')}</div>
+      <p class="muted" style="font-size:14px">Total per month: <b class="mono">${money(db.recurring.filter(r=>!r.paused).reduce((s,r)=>s+num(r.amount),0))}</b></p>`
+     :`<div class="list"><div class="empty">No monthly bills yet. Add rent, electricity or salaries once and they’ll repeat.</div></div>`);
+  }
+  const [f,t]=monthRange(S.month);
+  const ex=expBetween(f,t).sort((a,b)=>b.date.localeCompare(a.date));
+  const total=ex.reduce((s,e)=>s+num(e.amount),0);
+  const cats={};ex.forEach(e=>cats[e.category]=(cats[e.category]||0)+num(e.amount));
+  const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  return seg+`
+  <div class="daynav"><button data-act="month" data-id="-1" aria-label="Previous month">‹</button><div class="lbl">${fmtMonth(S.month)}</div><button data-act="month" data-id="1" aria-label="Next month">›</button></div>
+  <div class="card" style="margin-bottom:12px"><div class="muted" style="font-size:14px">Total spent</div><div style="font-size:30px;font-weight:700" class="mono">${money(total)}</div>
+   ${top.length?`<div style="margin-top:12px">${top.map(([c,v])=>hbar(c,v,top[0][1])).join('')}</div>`:''}</div>
+  ${ex.length?`<div class="list">${ex.map(e=>`<div class="item" data-act="exp" data-id="${e.id}"><span class="main"><div class="t">${esc(e.category)}</div><div class="s">${fmtDay(e.date)}${e.note?' · '+esc(e.note):''}</div></span><span class="r mono">${money(e.amount)}</span></div>`).join('')}</div>`
+  :`<div class="list"><div class="empty">No expenses in ${fmtMonth(S.month)}.</div></div>`}`;
+};
+FABS.money=['+ Add',()=>S.moneyTab==='recurring'?recurForm():expenseForm()];
+function hbar(label,v,max,fmt=money){return `<div class="hbar"><div class="top"><span>${esc(label)}</span><b>${fmt(v)}</b></div><div class="track"><div class="fill" style="width:${max?Math.max(2,v/max*100):0}%"></div></div></div>`}
+function expenseForm(e){
+  const isNew=!e;e=e||{category:'Rent',amount:'',date:today(),note:''};
+  sheet(isNew?'Add expense':'Edit expense',`${selectF('Category','category',EXP_CATS.map(c=>[c,c]),e.category)}${field('Amount','amount',e.amount,'number','inputmode="decimal" min="0"')}${field('Date','date',e.date,'date')}${field('Note (optional)','note',e.note)}${isNew?`<label class="check"><input type="checkbox" name="repeat"> Repeat every month on this day</label>`:''}`,
+  [...(isNew?[{label:'Cancel',cls:'sec'}]:[{label:'Delete',cls:'ghost-bad',fn:()=>{db.expenses=db.expenses.filter(x=>x.id!==e.id);save();render()}}]),
+   {label:isNew?'Add expense':'Save',cls:'red',fn:v=>{
+    if(!num(v.amount))return toast('Enter an amount'),false;if(!need(v.date,'Date'))return false;
+    if(isNew){
+      if(v.repeat){const r={id:uid(),category:v.category,amount:num(v.amount),day:parseD(v.date).getDate(),note:v.note,startMonth:ym(v.date)};db.recurring.push(r);runRecurring()}
+      else db.expenses.push({id:uid(),category:v.category,amount:num(v.amount),date:v.date,note:v.note});
+    }else Object.assign(byId('expenses',e.id),{category:v.category,amount:num(v.amount),date:v.date,note:v.note});
+    S.month=ym(v.date);save();render();toast(isNew?'Expense added':'Saved');
+  }}]);
+}
+function recurForm(r){
+  const isNew=!r;r=r||{category:'Rent',amount:'',day:1,note:'',paused:false};
+  sheet(isNew?'Add monthly bill':'Edit monthly bill',`${selectF('Category','category',EXP_CATS.map(c=>[c,c]),r.category)}${field('Amount each month','amount',r.amount,'number','inputmode="decimal" min="0"')}${field('Day of month (1–31)','day',r.day,'number','min="1" max="31" inputmode="numeric"')}${field('Note (optional)','note',r.note)}${isNew?'':`<label class="check"><input type="checkbox" name="paused" ${r.paused?'checked':''}> Paused</label>`}
+   <p class="muted" style="font-size:13.5px;margin:0">${isNew?'It will be added for this month if that day has already passed.':'Changes apply to future months. Past entries stay as they were.'}</p>`,
+  [...(isNew?[{label:'Cancel',cls:'sec'}]:[{label:'Delete',cls:'ghost-bad',fn:()=>{db.recurring=db.recurring.filter(x=>x.id!==r.id);save();render();toast('Monthly bill deleted. Past entries kept.')}}]),
+   {label:isNew?'Add bill':'Save',cls:'red',fn:v=>{
+    if(!num(v.amount))return toast('Enter an amount'),false;
+    const day=Math.min(31,Math.max(1,parseInt(v.day)||1));
+    if(isNew)db.recurring.push({id:uid(),category:v.category,amount:num(v.amount),day,note:v.note,startMonth:ym(today())});
+    else Object.assign(byId('recurring',r.id),{category:v.category,amount:num(v.amount),day,note:v.note,paused:!!v.paused});
+    const n=runRecurring();save();render();toast(n?`Saved · ${n} expense${n>1?'s':''} added`:'Saved');
+  }}]);
+}
+
+/* ---------- more ---------- */
+VIEWS.more=()=>`<div class="list menu">${Object.entries(SUBS).map(([k,[l,ic]])=>`<button class="item" data-act="sub" data-id="${k}"><span class="ic">${ic}</span><span class="main"><div class="t">${l}</div><div class="s">${({reports:'Income, profit, barber earnings, busiest days',inventory:`${db.products.length} products${db.products.filter(p=>num(p.qty)<=num(p.low)).length?' · some running low':''}`,clients:`${db.clients.length} saved clients`,barbers:`${activeBarbers().length} active · commission settings`,services:`${db.services.length} services`,settings:'Shop name, currency, backup'})[k]}</div></span><span class="chev">›</span></button>`).join('')}</div>`;
+
+/* ---------- reports ---------- */
+function periodRange(p){
+  const t=today(),d=parseD(t);
+  if(p==='week'){const s=addDays(t,-((d.getDay()+6)%7));return[s,t,'This week']}
+  if(p==='month')return[ym(t)+'-01',t,'This month'];
+  if(p==='last'){const x=new Date(d.getFullYear(),d.getMonth()-1,1);const m=ymd(x).slice(0,7);const r=monthRange(m);return[r[0],r[1],'Last month']}
+  if(p==='3m'){const x=new Date(d.getFullYear(),d.getMonth()-2,1);return[ymd(x),t,'Last 3 months']}
+  return[d.getFullYear()+'-01-01',t,'This year'];
+}
+VIEWS.reports=()=>{
+  const [f,t]=periodRange(S.period);
+  const inc=incomeBetween(f,t),ex=expBetween(f,t),expT=ex.reduce((s,e)=>s+num(e.amount),0);
+  const all=db.appts.filter(a=>a.date>=f&&a.date<=t);
+  const noshow=all.filter(a=>a.status==='noshow').length,booked=all.filter(a=>a.source!=='walkin'&&a.status!=='cancelled').length;
+  const profit=inc.total-expT;
+  // time series
+  const days=Math.round((parseD(t)-parseD(f))/864e5)+1;
+  let series=[];
+  if(days<=35){for(let i=0;i<days;i++){const d=addDays(f,i);series.push([parseD(d).getDate()+'',inc.ap.filter(a=>a.date===d).reduce((s,a)=>s+num(a.price),0)+inc.sl.filter(s=>s.date===d).reduce((s,x)=>s+num(x.amount),0),d===today()])}}
+  else{let m=ym(f);while(m<=ym(t)){const mm=m;series.push([MON[+m.slice(5)-1],inc.ap.filter(a=>ym(a.date)===mm).reduce((s,a)=>s+num(a.price),0)+inc.sl.filter(s=>ym(s.date)===mm).reduce((s,x)=>s+num(x.amount),0),mm===ym(today())]);const[y,mo]=m.split('-').map(Number);const nd=new Date(y,mo,1);m=ymd(nd).slice(0,7)}}
+  const maxS=Math.max(...series.map(s=>s[1]),1);
+  const step=series.length>16?Math.ceil(series.length/8):1;
+  // barbers
+  const bar=db.barbers.map(b=>{const ap=inc.ap.filter(a=>a.barberId===b.id);const rev=ap.reduce((s,a)=>s+num(a.price),0);return{name:b.name,n:ap.length,rev,com:rev*num(b.commission)/100,pct:num(b.commission)}}).filter(x=>x.n||x.rev);
+  // services
+  const sv={};inc.ap.forEach(a=>{sv[a.serviceName]=sv[a.serviceName]||{n:0,rev:0};sv[a.serviceName].n++;sv[a.serviceName].rev+=num(a.price)});
+  const svs=Object.entries(sv).sort((a,b)=>b[1].rev-a[1].rev);
+  // weekdays
+  const wd=[0,0,0,0,0,0,0];inc.ap.forEach(a=>wd[parseD(a.date).getDay()]++);
+  const wdo=[1,2,3,4,5,6,0],maxW=Math.max(...wd,1),bestW=wd.indexOf(Math.max(...wd));
+  // hours
+  const hr={};inc.ap.forEach(a=>{if(a.time){const h=+a.time.slice(0,2);hr[h]=(hr[h]||0)+1}});
+  const hrs=Object.keys(hr).map(Number).sort((a,b)=>a-b);const maxH=Math.max(...Object.values(hr),1);
+  // expenses
+  const cats={};ex.forEach(e=>cats[e.category]=(cats[e.category]||0)+num(e.amount));const ce=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const prodS={};inc.sl.forEach(s=>{prodS[s.name]=(prodS[s.name]||0)+num(s.amount)});const ps=Object.entries(prodS).sort((a,b)=>b[1]-a[1]);
+  const per=['week','month','last','3m','year'],perL={week:'This week',month:'This month',last:'Last month','3m':'3 months',year:'This year'};
+  return `
+  <div class="chips">${per.map(p=>`<button class="chip ${S.period===p?'on':''}" data-act="period" data-id="${p}">${perL[p]}</button>`).join('')}</div>
+  <div class="hero"><small>Net profit · ${fmtDay(f)} – ${fmtDay(t)}</small><div class="big" style="color:${profit<0?'#F3A6A6':'#fff'}">${money(profit)}</div>
+   <div class="row"><span>Income <b>${money(inc.total)}</b></span><span>Expenses <b>${money(expT)}</b></span></div></div>
+  <div class="grid2">
+   <div class="stat"><b>${money(inc.svc)}</b><span>From services</span></div>
+   <div class="stat"><b>${money(inc.prod)}</b><span>From product sales</span></div>
+   <div class="stat"><b>${inc.ap.length}</b><span>Clients served</span></div>
+   <div class="stat"><b>${money(inc.ap.length?inc.svc/inc.ap.length:0)}</b><span>Average per client</span></div>
+   <div class="stat"><b>${inc.ap.filter(a=>a.source==='walkin').length}</b><span>Walk-ins</span></div>
+   <div class="stat"><b>${booked?Math.round(noshow/booked*100):0}%</b><span>No-show rate (${noshow})</span></div>
+  </div>
+  <h2>Income ${days<=35?'by day':'by month'}</h2>
+  <div class="card"><div class="vchart">${series.map(s=>`<div class="col" title="${esc(s[0])}: ${money(s[1])}"><div class="b ${s[2]?'hi':''}" style="height:${s[1]/maxS*100}%"></div></div>`).join('')}</div>
+   <div class="vlabels">${series.map((s,i)=>`<span>${i%step===0?esc(s[0]):''}</span>`).join('')}</div>
+   <p class="muted" style="font-size:13px;margin:8px 0 0">Best: ${(()=>{const b=series.reduce((m,s)=>s[1]>m[1]?s:m,series[0]);return b&&b[1]?esc(b[0])+' · '+money(b[1]):'—'})()}</p></div>
+  <h2>Barber earnings</h2>
+  <div class="card">${bar.length?`<table class="t"><tr><th>Barber</th><th class="n">Clients</th><th class="n">Revenue</th><th class="n">Commission</th></tr>${bar.map(b=>`<tr><td>${esc(b.name)}</td><td class="n">${b.n}</td><td class="n">${money(b.rev)}</td><td class="n">${money(b.com)}<br><small class="muted">${b.pct}%</small></td></tr>`).join('')}</table>`:'<div class="empty">No completed services yet.</div>'}</div>
+  <h2>Top services</h2>
+  <div class="card">${svs.length?svs.map(([n,v])=>hbar(`${n} (${v.n})`,v.rev,svs[0][1].rev)).join(''):'<div class="empty">No completed services yet.</div>'}</div>
+  <h2>Busiest days</h2>
+  <div class="card"><div class="vchart" style="height:110px">${wdo.map(i=>`<div class="col"><div class="b ${i===bestW&&wd[i]?'hi':''}" style="height:${wd[i]/maxW*100}%"></div></div>`).join('')}</div>
+   <div class="vlabels">${wdo.map(i=>`<span>${DOW[i]}<br>${wd[i]}</span>`).join('')}</div></div>
+  ${hrs.length?`<h2>Busiest hours</h2><div class="card"><div class="vchart" style="height:100px">${hrs.map(h=>`<div class="col"><div class="b" style="height:${hr[h]/maxH*100}%"></div></div>`).join('')}</div><div class="vlabels">${hrs.map(h=>`<span>${(h%12||12)+(h<12?'a':'p')}</span>`).join('')}</div></div>`:''}
+  <h2>Expenses by category</h2>
+  <div class="card">${ce.length?ce.map(([c,v])=>hbar(c,v,ce[0][1])).join(''):'<div class="empty">No expenses in this period.</div>'}</div>
+  ${ps.length?`<h2>Product sales</h2><div class="card">${ps.map(([c,v])=>hbar(c,v,ps[0][1])).join('')}</div>`:''}`;
+};
+
+/* ---------- inventory ---------- */
+VIEWS.inventory=()=>{
+  const ps=[...db.products].sort((a,b)=>(num(a.qty)<=num(a.low)?0:1)-(num(b.qty)<=num(b.low)?0:1)||a.name.localeCompare(b.name));
+  const value=db.products.reduce((s,p)=>s+num(p.qty)*num(p.cost),0);
+  return `<div class="grid2" style="margin-bottom:14px"><div class="stat"><b>${db.products.length}</b><span>Products</span></div><div class="stat"><b>${money(value)}</b><span>Stock value at cost</span></div></div>
+  ${ps.length?`<div class="list">${ps.map(p=>{const low=num(p.qty)<=num(p.low);return `<div class="item" data-act="prod" data-id="${p.id}"><span class="main"><div class="t">${esc(p.name)}</div><div class="s">Sells for ${money(p.price)} · cost ${money(p.cost)}</div></span><span class="r"><div class="mono" style="font-size:18px;font-weight:700;color:${low?'var(--bad)':'inherit'}">${num(p.qty)}</div>${low?'<span class="pill p-low">Low</span>':'<span class="s muted" style="font-size:12.5px">in stock</span>'}</span></div>`}).join('')}</div>`
+  :`<div class="list"><div class="empty">Add the products you use or sell (wax, shampoo, blades…) to track stock and get low-stock alerts.</div></div>`}`;
+};
+FABS.inventory=['+ Product',()=>productForm()];
+function productForm(p){
+  const isNew=!p;p=p||{name:'',qty:'',low:2,cost:'',price:''};
+  sheet(isNew?'Add product':'Edit product',`${field('Product name','name',p.name)}<div class="row2">${field('In stock','qty',p.qty,'number','inputmode="numeric" min="0"')}${field('Alert when at or below','low',p.low,'number','inputmode="numeric" min="0"')}</div><div class="row2">${field('Cost price','cost',p.cost,'number','inputmode="decimal" min="0"')}${field('Selling price','price',p.price,'number','inputmode="decimal" min="0"')}</div>`,
+  [{label:'Cancel',cls:'sec'},{label:isNew?'Add product':'Save',cls:'red',fn:v=>{
+    if(!need(v.name,'Product name'))return false;
+    const rec={name:v.name,qty:num(v.qty),low:num(v.low),cost:num(v.cost),price:num(v.price)};
+    if(isNew)db.products.push({id:uid(),...rec});else Object.assign(byId('products',p.id),rec);
+    save();render();toast(isNew?'Product added':'Saved');
+  }}]);
+}
+function productActions(id){
+  const p=byId('products',id);if(!p)return;
+  const el=sheet(p.name,`<p class="muted" style="margin:0">${num(p.qty)} in stock · sells for ${money(p.price)}</p>
+  <div class="actions" style="margin-top:16px">
+   <button class="btn red" data-x="sell">Sell to a client</button>
+   <button class="btn sec" data-x="use">Used in shop (reduce stock)</button>
+   <button class="btn sec" data-x="restock">Restock</button>
+   <button class="btn sec" data-x="edit">Edit product</button>
+   <button class="btn ghost-bad" data-x="del">Delete product</button></div>`);
+  el.querySelector('.actions').onclick=e=>{
+    const x=e.target.closest('[data-x]')?.dataset.x;if(!x)return;closeSheet(el);
+    if(x==='sell')sheet('Sell '+p.name,`<div class="row2">${field('Quantity','qty',1,'number','inputmode="numeric" min="1"')}${field('Price each','price',p.price,'number','inputmode="decimal" min="0"')}</div>`,[{label:'Cancel',cls:'sec'},{label:'Record sale',cls:'ok',fn:v=>{const q=Math.max(1,num(v.qty));if(q>num(p.qty))toast('Note: stock went below zero');p.qty=num(p.qty)-q;db.sales.push({id:uid(),productId:p.id,name:p.name,qty:q,amount:q*num(v.price),date:today()});save();render();toast('Sold · '+money(q*num(v.price)))}}]);
+    else if(x==='use')sheet('Use '+p.name,field('Quantity used','qty',1,'number','inputmode="numeric" min="1"'),[{label:'Cancel',cls:'sec'},{label:'Update stock',cls:'red',fn:v=>{p.qty=Math.max(0,num(p.qty)-Math.max(1,num(v.qty)));save();render();toast('Stock updated')}}]);
+    else if(x==='restock')sheet('Restock '+p.name,`<div class="row2">${field('Quantity added','qty',10,'number','inputmode="numeric" min="1"')}${field('Cost each','cost',p.cost,'number','inputmode="decimal" min="0"')}</div><label class="check"><input type="checkbox" name="exp" checked> Add the cost to expenses</label>`,[{label:'Cancel',cls:'sec'},{label:'Restock',cls:'red',fn:v=>{const q=Math.max(1,num(v.qty));p.qty=num(p.qty)+q;if(num(v.cost))p.cost=num(v.cost);if(v.exp&&q*num(v.cost))db.expenses.push({id:uid(),category:'Products & supplies',amount:q*num(v.cost),date:today(),note:p.name+' ×'+q});save();render();toast('Restocked')}}]);
+    else if(x==='edit')productForm(p);
+    else if(x==='del')confirmSheet('Delete '+p.name+'? Past sales stay in your reports.','Delete',()=>{db.products=db.products.filter(z=>z.id!==id);save();render()});
+  };
+}
+
+/* ---------- clients ---------- */
+VIEWS.clients=()=>{
+  const q=S.clientQ.toLowerCase();
+  const stats=c=>{const ap=db.appts.filter(a=>a.clientId===c.id&&a.status==='completed');return{n:ap.length,spent:ap.reduce((s,a)=>s+num(a.price),0),last:ap.map(a=>a.date).sort().pop()}};
+  const list=db.clients.filter(c=>!q||c.name.toLowerCase().includes(q)||(c.phone||'').includes(q)).map(c=>({c,...stats(c)})).sort((a,b)=>(b.last||'').localeCompare(a.last||'')||a.c.name.localeCompare(b.c.name));
+  return `<input class="search" id="clientSearch" placeholder="Search name or phone" value="${esc(S.clientQ)}">
+  ${list.length?`<div class="list">${list.map(({c,n,spent,last})=>`<div class="item" data-act="client" data-id="${c.id}"><span class="main"><div class="t">${esc(c.name)}</div><div class="s">${esc(c.phone||'No phone')}${last?' · last visit '+fmtDay(last):''}</div></span><span class="r"><div class="mono">${money(spent)}</div><span class="s muted" style="font-size:12.5px">${n} visit${n===1?'':'s'}</span></span></div>`).join('')}</div>`
+  :`<div class="list"><div class="empty">${q?'No clients match your search.':'Clients are saved automatically when you book them.'}</div></div>`}`;
+};
+FABS.clients=['+ Client',()=>clientForm()];
+function clientForm(c){
+  const isNew=!c;c=c||{name:'',phone:'',notes:''};
+  sheet(isNew?'Add client':'Edit client',`${field('Name','name',c.name)}${field('Phone','phone',c.phone,'tel')}<label class="f"><span>Notes (style, preferences)</span><textarea name="notes">${esc(c.notes)}</textarea></label>`,
+  [...(isNew?[{label:'Cancel',cls:'sec'}]:[{label:'Delete',cls:'ghost-bad',fn:()=>{db.clients=db.clients.filter(x=>x.id!==c.id);save();render()}}]),
+   {label:isNew?'Add client':'Save',cls:'red',fn:v=>{if(!need(v.name,'Name'))return false;if(isNew)db.clients.push({id:uid(),name:v.name,phone:v.phone,notes:v.notes,created:Date.now()});else{Object.assign(byId('clients',c.id),{name:v.name,phone:v.phone,notes:v.notes});db.appts.forEach(a=>{if(a.clientId===c.id){a.clientName=v.name;a.phone=v.phone||a.phone}})}save();render();toast('Saved')}}]);
+}
+function clientActions(id){
+  const c=byId('clients',id);if(!c)return;
+  const ap=db.appts.filter(a=>a.clientId===id).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+  const done=ap.filter(a=>a.status==='completed');
+  const el=sheet(c.name,`<p class="muted" style="margin:0">${esc(c.phone||'No phone')} · ${done.length} visits · ${money(done.reduce((s,a)=>s+num(a.price),0))} spent</p>
+  ${c.notes?`<div class="card" style="margin-top:10px;background:var(--brass-soft);border-color:transparent">${esc(c.notes)}</div>`:''}
+  <div class="btnrow"><button class="btn red sm" data-x="book">Book</button>${c.phone?`<button class="btn sec sm" data-x="call">Call</button><button class="btn sec sm" data-x="wa">WhatsApp</button>`:''}<button class="btn sec sm" data-x="edit">Edit</button></div>
+  <h2>History</h2>${ap.length?`<div class="list">${ap.slice(0,30).map(a=>`<div class="item" style="cursor:default"><span class="main"><div class="t">${esc(a.serviceName)}</div><div class="s">${fmtDay(a.date)} · ${esc(barberName(a.barberId))}</div></span><span class="r"><div class="mono">${money(a.price)}</div><span class="pill p-${a.status}">${statusLabel(a.status)}</span></span></div>`).join('')}</div>`:'<div class="empty">No visits yet.</div>'}`);
+  el.querySelector('.btnrow').onclick=e=>{const x=e.target.closest('[data-x]')?.dataset.x;if(!x)return;
+    if(x==='book'){closeSheet(el);bookForm(null,{clientName:c.name,phone:c.phone||''})}
+    else if(x==='call')openExt('tel:'+c.phone);else if(x==='wa')openExt(waLink(c.phone,`Hi ${c.name}, `));else{closeSheet(el);clientForm(c)}};
+}
+
+/* ---------- barbers & services ---------- */
+VIEWS.barbers=()=>`<p class="muted" style="margin:0 0 12px;font-size:14.5px">Commission is the share of service revenue each barber earns. Reports use it to show what you owe each barber.</p>
+ <div class="list">${db.barbers.map(b=>`<div class="item" data-act="barber" data-id="${b.id}"><span class="bar-left" style="background:${b.color}"></span><span class="main"><div class="t">${esc(b.name)}</div><div class="s">${num(b.commission)}% commission${b.active===false?' · inactive':''}</div></span><span class="chev">›</span></div>`).join('')}</div>`;
+FABS.barbers=['+ Barber',()=>barberForm()];
+function barberForm(b){
+  const isNew=!b;b=b||{name:'',commission:40,active:true,color:BARBER_COLORS[db.barbers.length%BARBER_COLORS.length]};
+  sheet(isNew?'Add barber':'Edit barber',`${field('Name','name',b.name)}${field('Commission %','commission',b.commission,'number','inputmode="decimal" min="0" max="100"')}${selectF('Colour on schedule','color',BARBER_COLORS.map((c,i)=>[c,['Oxblood','Navy','Brass','Green','Plum','Copper','Teal'][i]]),b.color)}${isNew?'':`<label class="check"><input type="checkbox" name="active" ${b.active!==false?'checked':''}> Currently working here</label>`}`,
+  [{label:'Cancel',cls:'sec'},{label:isNew?'Add barber':'Save',cls:'red',fn:v=>{if(!need(v.name,'Name'))return false;const rec={name:v.name,commission:Math.min(100,num(v.commission)),color:v.color,active:isNew?true:!!v.active};if(isNew)db.barbers.push({id:uid(),...rec});else{if(!rec.active&&activeBarbers().length===1&&b.active!==false)return toast('Keep at least one active barber'),false;Object.assign(byId('barbers',b.id),rec)}save();render();toast('Saved')}}]);
+}
+VIEWS.services=()=>`<div class="list">${db.services.map(s=>`<div class="item" data-act="service" data-id="${s.id}"><span class="main"><div class="t">${esc(s.name)}</div><div class="s">${s.duration} min</div></span><span class="r mono">${money(s.price)}</span></div>`).join('')||'<div class="empty">Add your first service.</div>'}</div>`;
+FABS.services=['+ Service',()=>serviceForm()];
+function serviceForm(s){
+  const isNew=!s;s=s||{name:'',price:'',duration:30};
+  sheet(isNew?'Add service':'Edit service',`${field('Service name','name',s.name)}<div class="row2">${field('Price','price',s.price,'number','inputmode="decimal" min="0"')}${field('Minutes','duration',s.duration,'number','inputmode="numeric" min="5"')}</div>`,
+  [...(isNew?[{label:'Cancel',cls:'sec'}]:[{label:'Delete',cls:'ghost-bad',fn:()=>{if(db.services.length===1)return toast('Keep at least one service'),false;db.services=db.services.filter(x=>x.id!==s.id);save();render()}}]),
+   {label:isNew?'Add service':'Save',cls:'red',fn:v=>{if(!need(v.name,'Service name'))return false;const rec={name:v.name,price:num(v.price),duration:Math.max(5,num(v.duration)||30)};if(isNew)db.services.push({id:uid(),...rec});else Object.assign(byId('services',s.id),rec);save();render();toast('Saved')}}]);
+}
+
+/* ---------- settings ---------- */
+VIEWS.settings=()=>`
+ <div class="card">${field('Shop name','shop',db.settings.shop)}${selectF('Currency','currency',[['₹','₹ Indian rupee'],['$','$ Dollar'],['€','€ Euro'],['£','£ Pound'],['AED ','AED Dirham'],['SAR ','SAR Riyal'],['Rs ','Rs Rupee'],['৳','৳ Taka'],['₦','₦ Naira'],['R ','R Rand']],db.settings.currency)}<button class="btn block" data-act="saveSettings">Save</button></div>
+ <h2>Backup</h2>
+ <div class="card"><p style="margin:0 0 12px;font-size:14.5px">Your data lives only on this phone. Copy a backup now and then and keep it somewhere safe, like a note or WhatsApp message to yourself.</p>
+  <div class="btnrow" style="margin-top:0"><button class="btn sec" data-act="backup">Copy backup</button><button class="btn sec" data-act="restore">Restore</button></div></div>
+ <h2>Danger zone</h2>
+ <div class="card"><button class="btn ghost-bad block" data-act="reset">Erase all data</button></div>
+ <p class="muted" style="font-size:13px;text-align:center;margin-top:20px">Barber Manager 1.0 · works offline</p>`;
+
+/* ---------- actions ---------- */
+const ACT={
+  tab:id=>go(id),sub:id=>go('more',id),
+  book:()=>bookForm(),addWalkin:()=>{go('queue');walkinForm()},addExpense:()=>{S.moneyTab='expenses';go('money');expenseForm()},
+  appt:id=>apptActions(id),
+  complete:id=>{const a=byId('appts',id);a.status='completed';a.completedAt=Date.now();save();render();toast('Completed · '+money(a.price))},
+  day:id=>{S.date=id==='0'?today():addDays(S.date,+id);render()},
+  fbarber:id=>{S.barber=id;render()},
+  qitem:id=>queueActions(id),qdone:id=>finishWalkin(id),
+  mtab:id=>{S.moneyTab=id;render()},
+  month:id=>{const[y,m]=S.month.split('-').map(Number);const d=new Date(y,m-1+(+id),1);S.month=ymd(d).slice(0,7);render()},
+  exp:id=>expenseForm(byId('expenses',id)),recur:id=>recurForm(byId('recurring',id)),
+  period:id=>{S.period=id;render()},
+  prod:id=>productActions(id),client:id=>clientActions(id),barber:id=>barberForm(byId('barbers',id)),service:id=>serviceForm(byId('services',id)),
+  saveSettings:()=>{const n=$('#main [name=shop]').value.trim();if(n)db.settings.shop=n;db.settings.currency=$('#main [name=currency]').value;save();render();toast('Settings saved')},
+  backup:async()=>{const txt=JSON.stringify(db);let ok=false;try{await navigator.clipboard.writeText(txt);ok=true}catch(e){}
+    if(ok)toast('Backup copied. Paste it somewhere safe.');else sheet('Your backup',`<p style="margin:0 0 10px;font-size:14.5px">Select all of this text and copy it somewhere safe.</p><textarea style="width:100%;height:220px;font-size:12px" readonly onclick="this.select()">${esc(txt)}</textarea>`)},
+  restore:()=>sheet('Restore backup',`<p style="margin:0 0 10px;font-size:14.5px">Paste a backup you copied earlier. This replaces everything currently in the app.</p><label class="f"><textarea name="data" style="height:180px;font-size:12px"></textarea></label>`,[{label:'Cancel',cls:'sec'},{label:'Restore',cls:'red',fn:v=>{try{const d=JSON.parse(v.data);if(!d.settings||!Array.isArray(d.appts))throw 0;db=d;for(const k of ['barbers','services','clients','appts','queue','products','sales','expenses','recurring'])if(!Array.isArray(db[k]))db[k]=[];save();go('home');toast('Backup restored')}catch(e){toast('That doesn’t look like a valid backup');return false}}}]),
+  reset:()=>confirmSheet('Erase every appointment, client, expense and product? Copy a backup first if you might need it.','Erase everything',()=>{db=seed();save();go('home');toast('All data erased')})
+};
+document.addEventListener('click',e=>{
+  if(e.target.closest('.scrim'))return;
+  const el=e.target.closest('[data-act]');if(!el)return;
+  e.stopPropagation();ACT[el.dataset.act]?.(el.dataset.id,el);
+});
+document.addEventListener('input',e=>{if(e.target.id==='clientSearch'){S.clientQ=e.target.value;const pos=e.target.selectionStart;render();const s=$('#clientSearch');s.focus();s.setSelectionRange(pos,pos)}});
+$('#backBtn').onclick=()=>handleBack();
+
+function handleBack(){
+  if(sheetStack.length){closeSheet();return true}
+  if(S.sub){go('more');return true}
+  if(S.tab!=='home'){go('home');return true}
+  return false;
+}
+try{
+  const App=window.Capacitor?.Plugins?.App;
+  if(App)App.addListener('backButton',()=>{if(!handleBack())App.exitApp()});
+}catch(e){}
+
+/* refresh queue wait times every minute; run recurring on resume */
+setInterval(()=>{if(S.tab==='queue'&&!S.sub&&!sheetStack.length)render()},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(runRecurring())render()}});
+runRecurring();render();
+</script>
+</body>
+</html>
