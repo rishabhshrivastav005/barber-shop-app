@@ -1,11 +1,13 @@
 {
   "name": "barber-manager",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "dependencies": {
     "@capacitor/android": "^7.0.0",
     "@capacitor/app": "^7.0.0",
     "@capacitor/cli": "^7.0.0",
-    "@capacitor/core": "^7.0.0"
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0",
+    "@capacitor/haptics": "^7.0.0"
   }
 }
